@@ -1,0 +1,98 @@
+# CONTRIBUTING.md
+
+Contributor reference for humans and coding agents. The always-loaded agent rules
+live in AGENTS.md; this file holds the detail those rules point to.
+
+## Setup
+
+- Toolchain: Erlang/OTP 28 and Elixir 1.20 (pinned in `.tool-versions`; `mise install`
+  or `asdf install`). PostgreSQL 18 on `localhost:5432` with `postgres`/`postgres`
+  (for example `docker run -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:18`).
+- Install and set up everything: `mix setup`
+- Create/migrate/seed the database: `mix ecto.setup`
+- Drop and recreate the database: `mix ecto.reset`
+- Run the app: `mix phx.server` (or `iex -S mix phx.server`)
+- Quality gate: `mix precommit` (steps defined by the alias in `mix.exs`).
+  Dialyzer runs in CI; run `mix dialyzer` locally only when investigating a
+  CI failure.
+- Pre-commit hook (format + credo): `git config core.hooksPath .githooks`
+- Agent instruction sync: `mix usage_rules.sync` after every dependency change;
+  `mix usage_rules.sync --check` reports drift without writing.
+- Tidewave MCP for coding agents (dev only): `claude mcp add --transport http tidewave http://127.0.0.1:4000/tidewave/mcp`
+
+## Testing
+
+- Run all tests: `mix test`
+- Run one file: `mix test test/my_app_web/live/inbox_live_test.exs`
+- Run one test: `mix test test/my_app_web/live/inbox_live_test.exs:42`
+- Re-run only failures: `mix test --failed`
+- Stack: ExUnit, Ecto SQL Sandbox, Mox, StreamData, `Phoenix.LiveViewTest`,
+  PhoenixTest. `Req.Test` stubs `MyApp.Resend` (see `config/test.exs`).
+
+## Database & migrations
+
+- Blue-green deployment runs old and new code against one database. Use
+  expand-contract: ship an additive migration, roll out code, then ship a
+  contracting migration later. Never change schema and dependent code in one step.
+- Create indexes concurrently outside a transaction:
+  `@disable_ddl_transaction true` and `@disable_migration_lock true`.
+- Add CHECK constraints with `NOT VALID` first, then `VALIDATE CONSTRAINT` in a
+  later migration.
+- Set `lock_timeout` / `statement_timeout` for potentially slow DDL.
+- The Ecto `migration_lock` default (`:table_lock`) is kept; `:pg_advisory_lock`
+  is an opt-in for teams that need it (`config :my_app, MyApp.Repo, migration_lock: :pg_advisory_lock`).
+- Migrations run in prod via `MyApp.Release.migrate/0` (the Fly release command),
+  never `mix ecto.migrate` on a prod box.
+
+## Inbound webhooks
+
+- Resend `email.received` events are metadata-only; full content, when needed, is
+  fetched from the Receiving API using the event's email id.
+- Signatures are verified manually with the Svix scheme: HMAC-SHA256 over
+  `id.timestamp.body`, `whsec_`-stripped base64-decoded key, constant-time
+  comparison, ±300s timestamp tolerance. The absence of a `svix` dependency is
+  a deliberate decision — do not add one.
+- Events are deduplicated on `svix-id` via the `webhook_events` table; handlers
+  return 200 fast. Only the `svix-id` (and event type) is persisted — email
+  metadata is never stored in the database.
+- After dedupe, `MyApp.Inbound` broadcasts the event metadata over
+  `Phoenix.PubSub` on a per-sender topic (`inbound_emails:<normalized from>`).
+  The `/inbox` LiveView subscribes for the logged-in user's address, backfills
+  history from `GET /emails/receiving`, and keeps everything in process memory.
+- `From`-based matching is spoofable; it demonstrates data flow and must never
+  be used as an authentication or authorization signal.
+- Endpoint: `POST /webhooks/resend`. Point the Resend webhook at
+  `https://<host>/webhooks/resend` and set `RESEND_WEBHOOK_SECRET`.
+
+## Observability & health
+
+- `GET /healthz/live` — liveness, always 200, dependency-free.
+- `GET /healthz/ready` — readiness from a periodic `SELECT 1` probe cached in
+  `:persistent_term`.
+- Prometheus metrics are served on private port 9091 (`METRICS_PORT`) and
+  scraped by Fly; the port is never exposed as a public service.
+- OpenTelemetry is wired for Phoenix (incl. LiveView), Bandit, and Ecto;
+  `trace_id`/`span_id` appear in the JSON logs. Tracing exports over OTLP when
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+- LiveDashboard: `/dev/dashboard` (requires login). Mailbox preview (dev): `/dev/mailbox`.
+
+## Deployment
+
+- Fly.io, blue-green (`fly.toml`), migrations via the release command.
+- Secrets (`fly secrets set ...`): `SECRET_KEY_BASE`, `DATABASE_URL`,
+  `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, and optionally
+  `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_EXPORTER_OTLP_HEADERS`.
+- `min_machines_running = 1` is mandatory: `auto_stop_machines` would otherwise
+  stop the background GenServers (health probe, PromEx, schedulers).
+
+## Add-ons (documented, not installed)
+
+- **Assent** (`~> 0.3`) — OAuth/OIDC. Add a `user_identities` table keyed on
+  `user_id + provider + uid` with a unique index on `{provider, uid}`; configure
+  providers from environment variables.
+- **Cachex** (`4.1.x`) — add when a real caching need appears.
+- **logger_json** — other formatters (`GoogleCloud`, `Datadog`, `Elastic`) for
+  non-Fly log sinks.
+- Community agent skills/plugins (`claude-code-elixir`, `claude-elixir-phoenix`,
+  `bmad-elixir`, HexDocs MCP, ElixirLS MCP) are references only; skills are
+  executable instructions — review before adopting.
