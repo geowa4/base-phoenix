@@ -47,6 +47,9 @@ config :phoenix_live_view,
 # adapter with Swoosh.Adapters.Local (browse sent mail at /dev/mailbox) and
 # test.exs with Swoosh.Adapters.Test.
 config :my_app, MyApp.Mailer, adapter: Swoosh.Adapters.Resend
+
+# Sender address for account emails; overridden by MAIL_FROM in production.
+config :my_app, mail_from: "contact@example.com"
 config :swoosh, api_client: Swoosh.ApiClient.Req
 
 # Resend Receiving API client (MyApp.Resend) and inbound webhook verification

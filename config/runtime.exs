@@ -123,6 +123,8 @@ if config_env() == :prod do
   # LiveView. RESEND_WEBHOOK_SECRET verifies inbound webhook signatures.
   config :my_app, MyApp.Mailer, api_key: System.fetch_env!("RESEND_API_KEY")
   config :my_app, resend_api_key: System.fetch_env!("RESEND_API_KEY")
+  # MAIL_FROM must be an address on a domain verified in Resend.
+  config :my_app, mail_from: System.fetch_env!("MAIL_FROM")
   config :my_app, resend_webhook_secret: System.fetch_env!("RESEND_WEBHOOK_SECRET")
 
   # ## Metrics

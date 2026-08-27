@@ -80,7 +80,8 @@ live in AGENTS.md; this file holds the detail those rules point to.
 
 - Fly.io, blue-green (`fly.toml`), migrations via the release command.
 - Secrets (`fly secrets set ...`): `SECRET_KEY_BASE`, `DATABASE_URL`,
-  `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, and optionally
+  `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `MAIL_FROM` (sender for account
+  emails; must be on a domain verified in Resend), and optionally
   `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_EXPORTER_OTLP_HEADERS`.
 - `min_machines_running = 1` is mandatory: `auto_stop_machines` would otherwise
   stop the background GenServers (health probe, PromEx, schedulers).
@@ -105,7 +106,8 @@ fly mpg attach <cluster-id> --app <app>      # sets DATABASE_URL
 fly secrets set --app <app> --stage \
   SECRET_KEY_BASE="$(mix phx.gen.secret)" \
   RESEND_API_KEY="re_..." \
-  RESEND_WEBHOOK_SECRET="whsec_..."
+  RESEND_WEBHOOK_SECRET="whsec_..." \
+  MAIL_FROM="noreply@<verified-domain>"
 
 fly deploy --remote-only
 curl https://<app>.fly.dev/healthz/ready   # => ready
