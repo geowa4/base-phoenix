@@ -85,6 +85,51 @@ live in AGENTS.md; this file holds the detail those rules point to.
 - `min_machines_running = 1` is mandatory: `auto_stop_machines` would otherwise
   stop the background GenServers (health probe, PromEx, schedulers).
 
+### First deploy
+
+Fly app names cannot contain underscores, so `fly.toml` uses the kebab-case
+form of the app name (`app` and `PHX_HOST`); `mix my_app.rename` rewrites both.
+
+```sh
+fly apps create <app> --org <org>
+
+# Database: use Managed Postgres (`fly mpg`) for anything real. It provides
+# backups, point-in-time restore, and HA plans. Note that MPG currently offers
+# Postgres 16/17 (the app runs 18 locally; nothing here depends on 18-only
+# features).
+fly mpg create --name <app>-db --org <org> --region iad --pg-major-version 17 --plan basic
+fly mpg attach <cluster-id> --app <app>      # sets DATABASE_URL
+
+# Secrets. Stage them so they ship with the first deploy instead of triggering
+# a release each.
+fly secrets set --app <app> --stage \
+  SECRET_KEY_BASE="$(mix phx.gen.secret)" \
+  RESEND_API_KEY="re_..." \
+  RESEND_WEBHOOK_SECRET="whsec_..."
+
+fly deploy --remote-only
+curl https://<app>.fly.dev/healthz/ready   # => ready
+fly checks list --app <app>                # live + readiness passing per machine
+```
+
+`fly postgres create` (unmanaged, "Fly Postgres") is acceptable for throwaway
+testing only: it is a plain Postgres VM with no backups or managed failover.
+Give it at least 512 MB (`--vm-size shared-cpu-1x` defaults to 256 MB, which
+the OOM killer takes down within minutes: postgres-flex runs postgres, repmgr,
+haproxy, and an exporter). Attach it with
+`fly postgres attach <db-app> --app <app>`; the app config is identical either
+way because it only consumes `DATABASE_URL`.
+
+The template repository itself is deployed as the reference instance
+`base-phoenix` without renaming, by overriding the placeholders at deploy time:
+`fly secrets set --app base-phoenix PHX_HOST=base-phoenix.fly.dev` once, then
+`fly deploy --remote-only -a base-phoenix` (secrets take precedence over
+`[env]`).
+
+After the first deploy, point the Resend `email.received` webhook at
+`https://<app>.fly.dev/webhooks/resend` and set `RESEND_WEBHOOK_SECRET` to the
+signing secret Resend shows for that endpoint.
+
 ## Add-ons (documented, not installed)
 
 - **Assent** (`~> 0.3`) — OAuth/OIDC. Add a `user_identities` table keyed on

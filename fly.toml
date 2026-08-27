@@ -1,6 +1,8 @@
 # Fly.io configuration. Re-verify stanzas against the current Fly docs when
-# bumping flyctl; the schema drifts over time.
-app = "my_app"
+# bumping flyctl; the schema drifts over time. Fly app names cannot contain
+# underscores, so `app` and PHX_HOST use the kebab-case name; `mix my_app.rename`
+# rewrites both.
+app = "my-app"
 primary_region = "iad"
 kill_signal = "SIGTERM"
 
@@ -11,7 +13,7 @@ kill_signal = "SIGTERM"
   release_command = "/app/bin/migrate"
 
 [env]
-  PHX_HOST = "my_app.fly.dev"
+  PHX_HOST = "my-app.fly.dev"
   PORT = "8080"
   METRICS_PORT = "9091"
 

@@ -2,8 +2,8 @@ defmodule Mix.Tasks.MyApp.Rename do
   @shortdoc "Renames the starter template to your app's names (run once)"
 
   @moduledoc """
-  Renames the `my_app` / `MyApp` / `MyAppWeb` placeholders to your project's
-  names, in file contents and paths, then deletes itself and its test.
+  Renames the `my_app` / `my-app` / `MyApp` / `MyAppWeb` placeholders to your
+  project's names, in file contents and paths, then deletes itself and its test.
 
       mix my_app.rename --otp <snake_case_otp_app> --module <PascalCaseModule>
   """
@@ -25,11 +25,13 @@ defmodule Mix.Tasks.MyApp.Rename do
     validate_pascal_case!(module)
 
     # Substitution order matters: the most specific token first, so that
-    # MyAppWeb is not partially rewritten by the MyApp rule.
+    # MyAppWeb is not partially rewritten by the MyApp rule. The kebab-case form
+    # is used where underscores are not allowed (Fly app names and hostnames).
     subs = [
       {"MyAppWeb", module <> "Web"},
       {"MyApp", module},
-      {"my_app", otp}
+      {"my_app", otp},
+      {"my-app", String.replace(otp, "_", "-")}
     ]
 
     files = collect_files(".")

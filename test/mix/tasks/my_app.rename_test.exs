@@ -28,6 +28,7 @@ defmodule Mix.Tasks.MyApp.RenameTest do
     fixture(tmp, "test/my_app/foo_test.exs", "MyApp.Foo\n")
     fixture(tmp, ".github/workflows/ci.yml", "DATABASE_URL: postgres://localhost/my_app_test\n")
     fixture(tmp, ".gitignore", "my_app-*.tar\n")
+    fixture(tmp, "fly.toml", "app = \"my-app\"\nPHX_HOST = \"my-app.fly.dev\"\n")
     fixture(tmp, ".git/config", "[remote] url = git@github.com:acme/my_app.git\n")
     fixture(tmp, "deps/dep/lib/my_app_ref.ex", "MyApp\n")
     fixture(tmp, "_build/dev/lib/my_app/ebin/x", "MyApp\n")
@@ -54,6 +55,10 @@ defmodule Mix.Tasks.MyApp.RenameTest do
     assert File.read!(Path.join(tmp, "test/acme_shop/foo_test.exs")) == "AcmeShop.Foo\n"
     assert File.read!(Path.join(tmp, ".github/workflows/ci.yml")) =~ "acme_shop_test"
     assert File.read!(Path.join(tmp, ".gitignore")) == "acme_shop-*.tar\n"
+
+    assert File.read!(Path.join(tmp, "fly.toml")) ==
+             "app = \"acme-shop\"\nPHX_HOST = \"acme-shop.fly.dev\"\n"
+
     assert File.read!(Path.join(tmp, "LICENSE")) == "MIT License\n"
 
     # Untouched: VCS metadata, deps, build output, binary assets.
