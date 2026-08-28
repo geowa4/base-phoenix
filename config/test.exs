@@ -43,6 +43,10 @@ config :my_app, :metrics_port, 0
 # PhoenixTest drives the endpoint directly.
 config :phoenix_test, :endpoint, MyAppWeb.Endpoint
 
+# LiveDashboard's OS Data page is not used in test; skip the os_mon port
+# programs so they do not print "Erlang has closed" when the VM halts.
+config :os_mon, start_cpu_sup: false, start_memsup: false
+
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
