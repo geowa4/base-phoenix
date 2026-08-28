@@ -100,6 +100,9 @@ fly apps create <app> --org <org>
 # features).
 fly mpg create --name <app>-db --org <org> --region iad --pg-major-version 17 --plan basic
 fly mpg attach <cluster-id> --app <app>      # sets DATABASE_URL
+# Both mpg commands print the full connection string, password included, to
+# the terminal. Treat scrollback, CI logs, and agent transcripts as tainted;
+# rotate with `fly mpg users` and re-attach if that matters for the app.
 
 # Secrets. Stage them so they ship with the first deploy instead of triggering
 # a release each.
