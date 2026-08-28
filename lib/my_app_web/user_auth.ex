@@ -11,6 +11,8 @@ defmodule MyAppWeb.UserAuth do
 
   alias MyApp.Accounts
   alias MyApp.Accounts.Scope
+  alias MyApp.Accounts.User
+  alias Phoenix.LiveView.Socket
 
   # Make the remember me cookie valid for 14 days. This should match
   # the session validity setting in UserToken.
@@ -37,6 +39,7 @@ defmodule MyAppWeb.UserAuth do
   Redirects to the session's `:user_return_to` path
   or falls back to the `signed_in_path/1`.
   """
+  @spec log_in_user(Plug.Conn.t(), User.t(), map()) :: Plug.Conn.t()
   def log_in_user(conn, user, params \\ %{}) do
     user_return_to = get_session(conn, :user_return_to)
 
@@ -51,6 +54,7 @@ defmodule MyAppWeb.UserAuth do
 
   It clears all session data for safety. See renew_session.
   """
+  @spec log_out_user(Plug.Conn.t()) :: Plug.Conn.t()
   def log_out_user(conn) do
     user_token = get_session(conn, :user_token)
     user_token && Accounts.delete_user_session_token(user_token)
@@ -70,6 +74,7 @@ defmodule MyAppWeb.UserAuth do
 
   Will reissue the session token if it is older than the configured age.
   """
+  @spec fetch_current_scope_for_user(Plug.Conn.t(), keyword()) :: Plug.Conn.t()
   def fetch_current_scope_for_user(conn, _opts) do
     with {token, conn} <- ensure_user_token(conn),
          {user, token_inserted_at} <- Accounts.get_user_by_session_token(token) do
@@ -177,6 +182,7 @@ defmodule MyAppWeb.UserAuth do
   @doc """
   Disconnects existing sockets for the given tokens.
   """
+  @spec disconnect_sessions([%{required(:token) => binary()}]) :: :ok
   def disconnect_sessions(tokens) do
     Enum.each(tokens, fn %{token: token} ->
       MyAppWeb.Endpoint.broadcast(user_session_topic(token), "disconnect", %{})
@@ -217,6 +223,13 @@ defmodule MyAppWeb.UserAuth do
         live "/profile", ProfileLive, :index
       end
   """
+  @spec on_mount(
+          :mount_current_scope | :require_authenticated | :require_sudo_mode,
+          map(),
+          map(),
+          Socket.t()
+        ) ::
+          {:cont, Socket.t()} | {:halt, Socket.t()}
   def on_mount(:mount_current_scope, _params, session, socket) do
     {:cont, mount_current_scope(socket, session)}
   end
@@ -262,9 +275,17 @@ defmodule MyAppWeb.UserAuth do
     end)
   end
 
-  @doc "Returns the path to redirect to after log in."
+  @doc """
+  Returns the path to redirect to after log in.
+
+  Called with a `Plug.Conn` from `log_in_user/3` and with a
+  `Phoenix.LiveView.Socket` from LiveViews that bounce an already-signed-in
+  visitor; only the conn carries a `current_scope`, so a socket always falls
+  through to the root path.
+  """
   # the user was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{}}}}) do
+  @spec signed_in_path(Plug.Conn.t() | Socket.t()) :: String.t()
+  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %User{}}}}) do
     ~p"/users/settings"
   end
 
@@ -273,6 +294,7 @@ defmodule MyAppWeb.UserAuth do
   @doc """
   Plug for routes that require the user to be authenticated.
   """
+  @spec require_authenticated_user(Plug.Conn.t(), keyword()) :: Plug.Conn.t()
   def require_authenticated_user(conn, _opts) do
     if conn.assigns.current_scope && conn.assigns.current_scope.user do
       conn

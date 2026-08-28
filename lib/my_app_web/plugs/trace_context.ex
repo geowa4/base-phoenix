@@ -4,9 +4,12 @@ defmodule MyAppWeb.Plugs.TraceContext do
   JSON logs can be correlated with traces. The request span is started by
   `opentelemetry_bandit` before this plug runs.
   """
+  @behaviour Plug
 
+  @impl Plug
   def init(opts), do: opts
 
+  @impl Plug
   def call(conn, _opts) do
     case OpenTelemetry.Tracer.current_span_ctx() do
       :undefined ->
