@@ -6,7 +6,7 @@ section referenced below before working in that area.
 
 ## Project overview
 
-- Elixir 1.20+, Erlang/OTP 28, Phoenix 1.8 with LiveView, Ecto + PostgreSQL 18.
+- Elixir 1.20+, Erlang/OTP 28, Phoenix 1.8 with LiveView, Ecto + PostgreSQL 17.
 - Single web server: Bandit. HTTP client: `Req` (never `:httpoison`, `:tesla`, `:httpc`).
 - Setup and everyday commands: CONTRIBUTING.md § Setup.
 

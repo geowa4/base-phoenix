@@ -2,7 +2,7 @@
 
 A batteries-included, production-shaped Phoenix 1.8 LiveView application:
 
-- Elixir 1.20 / OTP 28, Bandit, Ecto + PostgreSQL 18
+- Elixir 1.20 / OTP 28, Bandit, Ecto + PostgreSQL 17
 - `phx.gen.auth` (magic link + password, Argon2id)
 - Resend outbound email (Swoosh) and a signature-verified inbound webhook
   feeding an authenticated `/inbox` LiveView over PubSub

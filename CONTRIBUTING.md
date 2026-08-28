@@ -6,8 +6,9 @@ live in AGENTS.md; this file holds the detail those rules point to.
 ## Setup
 
 - Toolchain: Erlang/OTP 28 and Elixir 1.20 (pinned in `.tool-versions`; `mise install`
-  or `asdf install`). PostgreSQL 18 on `localhost:5432` with `postgres`/`postgres`
-  (for example `docker run -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:18`).
+  or `asdf install`). PostgreSQL 17 on `localhost:5432` with `postgres`/`postgres`
+  (for example `podman run -d --name base-phoenix-pg -e POSTGRES_PASSWORD=postgres
+  -p 5432:5432 -v base-phoenix-pgdata:/var/lib/postgresql/data postgres:17`).
 - Install and set up everything: `mix setup`
 - Create/migrate/seed the database: `mix ecto.setup`
 - Drop and recreate the database: `mix ecto.reset`
