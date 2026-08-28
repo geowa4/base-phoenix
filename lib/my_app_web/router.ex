@@ -34,6 +34,7 @@ defmodule MyAppWeb.Router do
   scope "/healthz", MyAppWeb do
     get "/live", HealthController, :live
     get "/ready", HealthController, :ready
+    get "/version", HealthController, :version
   end
 
   ## Inbound webhooks

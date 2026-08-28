@@ -10,4 +10,9 @@ defmodule MyAppWeb.HealthController do
       do: send_resp(conn, 200, "ready"),
       else: send_resp(conn, 503, "not ready")
   end
+
+  @doc "Build identity: the git commit baked into the release image."
+  def version(conn, _params) do
+    json(conn, %{version: Application.fetch_env!(:my_app, :git_sha)})
+  end
 end

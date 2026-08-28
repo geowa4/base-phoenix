@@ -94,6 +94,12 @@ RUN chown nobody /app
 # set runner ENV
 ENV MIX_ENV="prod"
 
+# The deploying commit, passed with `--build-arg GIT_SHA=$(git rev-parse HEAD)`.
+# Baked into the image so it stays correct across rollbacks; exposed at
+# /healthz/version and as the OpenTelemetry service.version.
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
+
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/my_app ./
 

@@ -69,6 +69,9 @@ live in AGENTS.md; this file holds the detail those rules point to.
 - `GET /healthz/live` — liveness, always 200, dependency-free.
 - `GET /healthz/ready` — readiness from a periodic `SELECT 1` probe cached in
   `:persistent_term`.
+- `GET /healthz/version` — `{"version": "<git sha>"}` of the deployed build,
+  from the `GIT_SHA` build arg (`unknown` when not passed, e.g. locally). The
+  same value is the OpenTelemetry `service.version` resource attribute.
 - Prometheus metrics are served on private port 9091 (`METRICS_PORT`) and
   scraped by Fly; the port is never exposed as a public service.
 - OpenTelemetry is wired for Phoenix (incl. LiveView), Bandit, and Ecto;
@@ -112,8 +115,11 @@ fly secrets set --app <app> --stage \
   RESEND_WEBHOOK_SECRET="whsec_..." \
   MAIL_FROM="noreply@<verified-domain>"
 
-fly deploy --remote-only
-curl https://<app>.fly.dev/healthz/ready   # => ready
+# GIT_SHA is baked into the image; the remote builder never sees .git, so it
+# must be passed explicitly (the deploy workflow does this for you).
+fly deploy --remote-only --build-arg GIT_SHA="$(git rev-parse HEAD)"
+curl https://<app>.fly.dev/healthz/ready     # => ready
+curl https://<app>.fly.dev/healthz/version   # => {"version":"<sha>"}
 fly checks list --app <app>                # live + readiness passing per machine
 ```
 
@@ -128,8 +134,8 @@ way because it only consumes `DATABASE_URL`.
 The template repository itself is deployed as the reference instance
 `base-phoenix` without renaming, by overriding the placeholders at deploy time:
 `fly secrets set --app base-phoenix PHX_HOST=base-phoenix.fly.dev` once, then
-`fly deploy --remote-only -a base-phoenix` (secrets take precedence over
-`[env]`).
+`fly deploy --remote-only -a base-phoenix --build-arg GIT_SHA="$(git rev-parse HEAD)"`
+(secrets take precedence over `[env]`).
 
 ### Continuous deployment
 

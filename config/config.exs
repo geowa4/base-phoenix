@@ -69,12 +69,10 @@ config :my_app, MyApp.PromEx,
   grafana: :disabled,
   metrics_server: :disabled
 
-# OpenTelemetry: the resource name is fixed here; the exporter is selected in
-# config/runtime.exs (OTLP in prod when OTEL_EXPORTER_OTLP_ENDPOINT is set,
-# otherwise none).
-config :opentelemetry,
-  resource: %{service: %{name: "my_app"}},
-  traces_exporter: :none
+# OpenTelemetry: the resource (service name + version) is built in
+# config/runtime.exs, where the exporter is also selected (OTLP in prod when
+# OTEL_EXPORTER_OTLP_ENDPOINT is set, otherwise none).
+config :opentelemetry, traces_exporter: :none
 
 # Configure esbuild (the version is required)
 config :esbuild,

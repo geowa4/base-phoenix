@@ -7,6 +7,15 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
+# ## Build identity
+#
+# GIT_SHA is baked into the release image by the Dockerfile (`--build-arg
+# GIT_SHA=...`, see CONTRIBUTING.md § Deployment). It is served at
+# /healthz/version and attached to every trace as service.version.
+git_sha = System.get_env("GIT_SHA", "unknown")
+config :my_app, git_sha: git_sha
+config :opentelemetry, resource: %{service: %{name: "my_app", version: git_sha}}
+
 # ## Using releases
 #
 # If you use `mix release`, you need to explicitly enable the server

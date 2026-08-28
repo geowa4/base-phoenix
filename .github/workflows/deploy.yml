@@ -50,4 +50,4 @@ jobs:
           # commit CI actually verified.
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only --app "$FLY_APP"
+      - run: flyctl deploy --remote-only --app "$FLY_APP" --build-arg GIT_SHA="$(git rev-parse HEAD)"

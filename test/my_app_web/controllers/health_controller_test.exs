@@ -24,4 +24,9 @@ defmodule MyAppWeb.HealthControllerTest do
     :persistent_term.put(@key, false)
     assert response(get(conn, ~p"/healthz/ready"), 503) == "not ready"
   end
+
+  test "GET /healthz/version returns the configured git sha", %{conn: conn} do
+    expected = Application.fetch_env!(:my_app, :git_sha)
+    assert %{"version" => ^expected} = json_response(get(conn, ~p"/healthz/version"), 200)
+  end
 end
