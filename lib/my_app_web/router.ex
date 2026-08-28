@@ -60,7 +60,7 @@ defmodule MyAppWeb.Router do
 
     import Phoenix.LiveDashboard.Router
 
-    live_dashboard "/dashboard", metrics: MyAppWeb.Telemetry
+    live_dashboard "/dashboard", metrics: MyAppWeb.Telemetry, ecto_repos: [MyApp.Repo]
   end
 
   # Enable the Swoosh mailbox preview in development

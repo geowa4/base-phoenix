@@ -24,7 +24,7 @@ defmodule MyApp.MixProject do
   def application do
     [
       mod: {MyApp.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon]
     ]
   end
 
@@ -53,6 +53,7 @@ defmodule MyApp.MixProject do
       {:phoenix_live_view, "~> 1.2.9"},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:ecto_psql_extras, "~> 0.8"},
       {:bandit, "~> 1.0"},
       {:dns_cluster, "~> 0.2.0"},
       {:gettext, "~> 1.0"},
