@@ -3,6 +3,31 @@ defmodule Mix.SpriteTest do
 
   alias Mix.Sprite
 
+  describe "parse_args/2" do
+    test "accepts --name plus the task's own switches" do
+      assert Sprite.parse_args(["--name", "app", "--force", "rest"], force: :boolean) ==
+               {[name: "app", force: true], ["rest"]}
+    end
+
+    test "raises on unknown switches" do
+      assert_raise Mix.Error, ~r/Unknown or invalid options: --nope/, fn ->
+        Sprite.parse_args(["--nope"])
+      end
+    end
+  end
+
+  describe "sprite_name/1" do
+    test "prefers an explicit --name over the git remote" do
+      assert Sprite.sprite_name(name: "explicit") == "explicit"
+    end
+  end
+
+  describe "deploy_key_title/1" do
+    test "namespaces the key by sprite name" do
+      assert Sprite.deploy_key_title("app") == "sprite app"
+    end
+  end
+
   describe "repo_name/1" do
     test "handles scp-like, ssh://, and https URLs" do
       assert Sprite.repo_name("git@github.com:acme/app.git") == "app"
