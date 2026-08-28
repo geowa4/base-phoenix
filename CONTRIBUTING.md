@@ -28,7 +28,10 @@ live in AGENTS.md; this file holds the detail those rules point to.
 - Run one test: `mix test test/my_app_web/live/inbox_live_test.exs:42`
 - Re-run only failures: `mix test --failed`
 - Stack: ExUnit, Ecto SQL Sandbox, Mox, StreamData, `Phoenix.LiveViewTest`,
-  PhoenixTest. `Req.Test` stubs `MyApp.Resend` (see `config/test.exs`).
+  PhoenixTest. `Req.Test` stubs the HTTP behind `MyApp.Resend` (see
+  `config/test.exs`); consumers of the Receiving API depend on the
+  `MyApp.Resend.Client` behaviour and are tested against `MyApp.ResendMock`
+  (Mox, defined in `test/support/mocks.ex`, wired via `:resend_client`).
 
 ## Database & migrations
 

@@ -34,6 +34,9 @@ config :my_app,
 
 config :my_app, MyApp.Resend, req_options: [plug: {Req.Test, MyApp.Resend}, retry: false]
 
+# Consumers of the Receiving API go through a Mox mock (defined in test/support/mocks.ex).
+config :my_app, :resend_client, MyApp.ResendMock
+
 # Let the OS pick a free port for the private metrics listener.
 config :my_app, :metrics_port, 0
 

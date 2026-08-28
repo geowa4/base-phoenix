@@ -11,8 +11,10 @@ defmodule MyAppWeb.InboxLive do
   """
   use MyAppWeb, :live_view
 
-  alias MyApp.{Inbound, Resend}
+  alias MyApp.Inbound
   alias MyApp.Inbound.Email
+
+  @resend Application.compile_env(:my_app, :resend_client, MyApp.Resend)
 
   @impl true
   def mount(_params, _session, socket) do
@@ -24,7 +26,7 @@ defmodule MyAppWeb.InboxLive do
      socket
      |> assign(page_title: "Inbox", user_email: user_email, loading: true)
      |> stream(:emails, [])
-     |> start_async(:backfill, fn -> Resend.list_received_all() end)}
+     |> start_async(:backfill, fn -> @resend.list_received_all() end)}
   end
 
   @impl true

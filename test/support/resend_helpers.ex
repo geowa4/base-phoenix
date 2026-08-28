@@ -1,7 +1,7 @@
 defmodule MyApp.ResendHelpers do
   @moduledoc """
   Test helpers for the Resend integration: Svix-style signing of webhook
-  payloads and `Req.Test` stubs for the Receiving API.
+  payloads and builders for Receiving API objects and webhook events.
   """
   import Plug.Conn
 
@@ -69,12 +69,5 @@ defmodule MyApp.ResendHelpers do
       },
       Map.new(attrs, fn {k, v} -> {to_string(k), v} end)
     )
-  end
-
-  @doc "Stubs the Receiving API with a single page of `emails`."
-  def stub_received_emails(emails, has_more \\ false) do
-    Req.Test.stub(MyApp.Resend, fn conn ->
-      Req.Test.json(conn, %{"object" => "list", "has_more" => has_more, "data" => emails})
-    end)
   end
 end

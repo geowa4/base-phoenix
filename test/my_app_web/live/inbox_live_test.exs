@@ -1,18 +1,15 @@
 defmodule MyAppWeb.InboxLiveTest do
-  # Req.Test stubs are shared with the LiveView process and its async task.
-  use MyAppWeb.ConnCase, async: false
+  use MyAppWeb.ConnCase, async: true
 
+  import Mox
   import Phoenix.LiveViewTest
   import MyApp.ResendHelpers
 
   alias MyApp.Inbound
+  alias MyApp.ResendMock
 
+  setup :verify_on_exit!
   setup :register_and_log_in_user
-
-  setup context do
-    Req.Test.set_req_test_to_shared(context)
-    :ok
-  end
 
   test "redirects anonymous visitors to log in" do
     conn = build_conn()
@@ -29,7 +26,7 @@ defmodule MyAppWeb.InboxLiveTest do
     other =
       received_email(%{id: "em_other", from: "someone-else@example.com", subject: "Not mine"})
 
-    stub_received_emails([other, mine])
+    expect(ResendMock, :list_received_all, fn -> {:ok, [other, mine]} end)
 
     {:ok, view, _html} = live(conn, ~p"/inbox")
 
@@ -43,9 +40,7 @@ defmodule MyAppWeb.InboxLiveTest do
   end
 
   test "shows a flash when the backfill fails", %{conn: conn} do
-    Req.Test.stub(MyApp.Resend, fn conn ->
-      conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"message" => "boom"})
-    end)
+    expect(ResendMock, :list_received_all, fn -> {:error, :econnrefused} end)
 
     {:ok, view, _html} = live(conn, ~p"/inbox")
     render_async(view)
@@ -55,7 +50,7 @@ defmodule MyAppWeb.InboxLiveTest do
   end
 
   test "new emails from the webhook appear live without a remount", %{conn: conn, user: user} do
-    stub_received_emails([])
+    expect(ResendMock, :list_received_all, fn -> {:ok, []} end)
 
     {:ok, view, _html} = live(conn, ~p"/inbox")
     render_async(view)
@@ -69,7 +64,7 @@ defmodule MyAppWeb.InboxLiveTest do
   end
 
   test "emails from other senders are not delivered", %{conn: conn} do
-    stub_received_emails([])
+    expect(ResendMock, :list_received_all, fn -> {:ok, []} end)
 
     {:ok, view, _html} = live(conn, ~p"/inbox")
     render_async(view)
@@ -80,7 +75,7 @@ defmodule MyAppWeb.InboxLiveTest do
   end
 
   test "is reachable through PhoenixTest", %{conn: conn, user: user} do
-    stub_received_emails([])
+    expect(ResendMock, :list_received_all, fn -> {:ok, []} end)
 
     conn
     |> visit(~p"/inbox")

@@ -4,8 +4,12 @@ defmodule MyApp.Resend do
   `config :my_app, :resend_api_key` (set in `config/runtime.exs`).
 
   In test, `config :my_app, MyApp.Resend, req_options: [plug: {Req.Test, MyApp.Resend}]`
-  routes every request to a `Req.Test` stub.
+  routes every request to a `Req.Test` stub. Consumers depend on the
+  `MyApp.Resend.Client` behaviour instead and are tested against
+  `MyApp.ResendMock` (Mox).
   """
+
+  @behaviour MyApp.Resend.Client
 
   @base_url "https://api.resend.com"
   @page_size 100
@@ -53,6 +57,7 @@ defmodule MyApp.Resend do
   first, up to `max_pages` pages of #{@page_size}.
   """
   @spec list_received_all(non_neg_integer()) :: {:ok, [email()]} | {:error, term()}
+  @impl true
   def list_received_all(max_pages \\ @max_pages), do: fetch_pages([], nil, max_pages)
 
   defp fetch_pages(acc, _cursor, 0), do: {:ok, acc}
