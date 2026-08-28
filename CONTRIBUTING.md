@@ -102,7 +102,7 @@ fly mpg create --name <app>-db --org <org> --region iad --pg-major-version 17 --
 fly mpg attach <cluster-id> --app <app>      # sets DATABASE_URL
 # Both mpg commands print the full connection string, password included, to
 # the terminal. Treat scrollback, CI logs, and agent transcripts as tainted;
-# rotate with `fly mpg users` and re-attach if that matters for the app.
+# see "Rotating the database credential" below.
 
 # Secrets. Stage them so they ship with the first deploy instead of triggering
 # a release each.
@@ -130,6 +130,31 @@ The template repository itself is deployed as the reference instance
 `fly secrets set --app base-phoenix PHX_HOST=base-phoenix.fly.dev` once, then
 `fly deploy --remote-only -a base-phoenix` (secrets take precedence over
 `[env]`).
+
+### Rotating the database credential
+
+The connection string is an ordinary Fly secret: `fly mpg create`/`attach`
+print it, and `fly ssh console -C 'sh -c "printenv DATABASE_URL"'` reads it
+back from any machine. Rotation is zero-downtime if done in this order:
+
+```sh
+fly mpg users create <cluster-id> --username <new-user> --role schema_admin
+fly mpg attach <cluster-id> --app <app> --username <new-user>   # rewrites DATABASE_URL
+fly status --app <app>        # wait until only the new machine version remains
+fly mpg users delete <cluster-id> --username <old-user>
+```
+
+- The role **must** be `schema_admin`. MPG tables are owned by the shared
+  `schema_admin` role rather than by the user that created them, so a new
+  `schema_admin` user inherits ownership and migrations keep working; a
+  `writer` user can read and write but every `ALTER TABLE` and the migrator's
+  lock on `schema_migrations` will fail.
+- `attach` sets `DATABASE_URL` as an unstaged secret, which rolls the machines:
+  new ones pass the readiness gate on the new credential before old ones stop.
+- Deleting a user kills its live connections immediately. Delete the old user
+  only after the old machines are gone, never before re-attaching — otherwise
+  the pool cannot reconnect, `/healthz/ready` fails, and Fly stops routing to
+  the app until a new secret is deployed.
 
 After the first deploy, point the Resend `email.received` webhook at
 `https://<app>.fly.dev/webhooks/resend` and set `RESEND_WEBHOOK_SECRET` to the
