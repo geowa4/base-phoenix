@@ -1,5 +1,5 @@
 defmodule MyApp.AccountsTest do
-  use MyApp.DataCase
+  use MyApp.DataCase, async: true
 
   alias MyApp.Accounts
 

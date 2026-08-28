@@ -50,7 +50,7 @@ defmodule MyAppWeb.InboxLiveTest do
     {:ok, view, _html} = live(conn, ~p"/inbox")
     render_async(view)
 
-    assert render(view) =~ "Could not load inbox history"
+    assert has_element?(view, "#flash-error", "Could not load inbox history")
     refute has_element?(view, "#inbox-loading")
   end
 
@@ -65,8 +65,7 @@ defmodule MyAppWeb.InboxLiveTest do
 
     :ok = Inbound.handle_event(event)
 
-    assert render(view) =~ "Live update"
-    assert has_element?(view, "#emails-em_live")
+    assert has_element?(view, "#emails-em_live", "Live update")
   end
 
   test "emails from other senders are not delivered", %{conn: conn} do

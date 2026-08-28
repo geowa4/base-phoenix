@@ -231,7 +231,7 @@ defmodule MyAppWeb.UserAuthTest do
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_scope, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:mount_current_scope, %{}, session, lv_socket())
 
       assert updated_socket.assigns.current_scope.user.id == user.id
     end
@@ -241,7 +241,7 @@ defmodule MyAppWeb.UserAuthTest do
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_scope, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:mount_current_scope, %{}, session, lv_socket())
 
       assert updated_socket.assigns.current_scope == nil
     end
@@ -250,7 +250,7 @@ defmodule MyAppWeb.UserAuthTest do
       session = conn |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_scope, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:mount_current_scope, %{}, session, lv_socket())
 
       assert updated_socket.assigns.current_scope == nil
     end
@@ -262,7 +262,7 @@ defmodule MyAppWeb.UserAuthTest do
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:require_authenticated, %{}, session, %LiveView.Socket{})
+        UserAuth.on_mount(:require_authenticated, %{}, session, lv_socket())
 
       assert updated_socket.assigns.current_scope.user.id == user.id
     end
@@ -271,24 +271,18 @@ defmodule MyAppWeb.UserAuthTest do
       user_token = "invalid_token"
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
-      socket = %LiveView.Socket{
-        endpoint: MyAppWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
-      }
+      {:halt, updated_socket} =
+        UserAuth.on_mount(:require_authenticated, %{}, session, lv_socket())
 
-      {:halt, updated_socket} = UserAuth.on_mount(:require_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_scope == nil
     end
 
     test "redirects to login page if there isn't a user_token", %{conn: conn} do
       session = conn |> get_session()
 
-      socket = %LiveView.Socket{
-        endpoint: MyAppWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
-      }
+      {:halt, updated_socket} =
+        UserAuth.on_mount(:require_authenticated, %{}, session, lv_socket())
 
-      {:halt, updated_socket} = UserAuth.on_mount(:require_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_scope == nil
     end
   end
@@ -298,13 +292,8 @@ defmodule MyAppWeb.UserAuthTest do
       user_token = Accounts.generate_user_session_token(user)
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
-      socket = %LiveView.Socket{
-        endpoint: MyAppWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
-      }
-
       assert {:cont, _updated_socket} =
-               UserAuth.on_mount(:require_sudo_mode, %{}, session, socket)
+               UserAuth.on_mount(:require_sudo_mode, %{}, session, lv_socket())
     end
 
     test "redirects when authentication is too old", %{conn: conn, user: user} do
@@ -315,13 +304,8 @@ defmodule MyAppWeb.UserAuthTest do
       assert DateTime.compare(token_inserted_at, user.authenticated_at) == :gt
       session = conn |> put_session(:user_token, user_token) |> get_session()
 
-      socket = %LiveView.Socket{
-        endpoint: MyAppWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
-      }
-
       assert {:halt, _updated_socket} =
-               UserAuth.on_mount(:require_sudo_mode, %{}, session, socket)
+               UserAuth.on_mount(:require_sudo_mode, %{}, session, lv_socket())
     end
   end
 
@@ -397,5 +381,13 @@ defmodule MyAppWeb.UserAuthTest do
         topic: "users_sessions:dG9rZW4y"
       }
     end
+  end
+
+  # A socket complete enough for the on_mount hooks to put_flash/redirect on.
+  defp lv_socket do
+    %LiveView.Socket{
+      endpoint: MyAppWeb.Endpoint,
+      assigns: %{__changed__: %{}, flash: %{}}
+    }
   end
 end

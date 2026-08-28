@@ -1,5 +1,5 @@
 defmodule MyApp.Accounts.UserNotifierTest do
-  use MyApp.DataCase, async: true
+  use ExUnit.Case, async: true
 
   import Swoosh.TestAssertions
 

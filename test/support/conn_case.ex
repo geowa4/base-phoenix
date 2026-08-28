@@ -16,6 +16,13 @@ defmodule MyAppWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+  use MyAppWeb, :verified_routes
+
+  import ExUnit.Assertions
+  import Phoenix.ConnTest
+
+  # For the helpers defined in this module's own body.
+  @endpoint MyAppWeb.Endpoint
 
   using do
     quote do
@@ -34,7 +41,7 @@ defmodule MyAppWeb.ConnCase do
 
   setup tags do
     MyApp.DataCase.setup_sandbox(tags)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    {:ok, conn: build_conn()}
   end
 
   @doc """
@@ -55,6 +62,20 @@ defmodule MyAppWeb.ConnCase do
       |> Enum.into([])
 
     %{conn: log_in_user(conn, user, opts), user: user, scope: scope}
+  end
+
+  @doc """
+  Asserts that `conn` renders the signed-in navigation for `user`.
+
+  Used after a login round-trip to prove the session actually took effect on a
+  subsequent request, not just on the redirect.
+  """
+  def assert_logged_in_menu(conn, user) do
+    response = conn |> get(~p"/") |> html_response(200)
+
+    assert response =~ user.email
+    assert response =~ ~p"/users/settings"
+    assert response =~ ~p"/users/log-out"
   end
 
   @doc """

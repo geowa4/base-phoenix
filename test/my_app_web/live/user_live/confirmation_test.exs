@@ -12,20 +12,14 @@ defmodule MyAppWeb.UserLive.ConfirmationTest do
 
   describe "Confirm user" do
     test "renders confirmation page for unconfirmed user", %{conn: conn, unconfirmed_user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_login_instructions(user, url)
-        end)
+      token = login_token(user)
 
       {:ok, _lv, html} = live(conn, ~p"/users/log-in/#{token}")
       assert html =~ "Confirm and stay logged in"
     end
 
     test "renders login page for confirmed user", %{conn: conn, confirmed_user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_login_instructions(user, url)
-        end)
+      token = login_token(user)
 
       {:ok, _lv, html} = live(conn, ~p"/users/log-in/#{token}")
       refute html =~ "Confirm my account"
@@ -35,10 +29,7 @@ defmodule MyAppWeb.UserLive.ConfirmationTest do
     test "renders login page for already logged in user", %{conn: conn, confirmed_user: user} do
       conn = log_in_user(conn, user)
 
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_login_instructions(user, url)
-        end)
+      token = login_token(user)
 
       {:ok, _lv, html} = live(conn, ~p"/users/log-in/#{token}")
       refute html =~ "Confirm my account"
@@ -46,10 +37,7 @@ defmodule MyAppWeb.UserLive.ConfirmationTest do
     end
 
     test "confirms the given token once", %{conn: conn, unconfirmed_user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_login_instructions(user, url)
-        end)
+      token = login_token(user)
 
       {:ok, lv, _html} = live(conn, ~p"/users/log-in/#{token}")
 
@@ -80,10 +68,7 @@ defmodule MyAppWeb.UserLive.ConfirmationTest do
       conn: conn,
       confirmed_user: user
     } do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_login_instructions(user, url)
-        end)
+      token = login_token(user)
 
       {:ok, lv, _html} = live(conn, ~p"/users/log-in/#{token}")
 
