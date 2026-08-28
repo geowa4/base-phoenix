@@ -4,6 +4,11 @@ on:
     branches: [main, trunk]
   pull_request:
 
+# CI never writes to the repository. Set explicitly so the template stays
+# least-privilege in repositories whose default workflow permissions are write.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,12 +25,12 @@ jobs:
       MIX_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/my_app_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.20.3"
           otp-version: "28.3"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             deps
@@ -51,12 +56,12 @@ jobs:
     env:
       MIX_ENV: dev
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: "1.20.3"
           otp-version: "28.3"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             deps
