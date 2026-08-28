@@ -131,6 +131,36 @@ The template repository itself is deployed as the reference instance
 `fly deploy --remote-only -a base-phoenix` (secrets take precedence over
 `[env]`).
 
+### Continuous deployment
+
+`.github/workflows/deploy.yml` deploys every successful CI run on the default
+branch, and can also be run by hand from the Actions tab (that deploys the ref
+you select). It is inert until the repository is configured, so a fresh copy of
+the template does nothing on push:
+
+- Repository variable `FLY_APP`: the Fly app name. The job is skipped while it
+  is unset.
+- Repository secret `FLY_API_TOKEN`: a deploy token scoped to that one app. The
+  job fails with an explicit error if `FLY_APP` is set but the token is missing.
+
+The workflow reads the app name from the variable rather than from `fly.toml`,
+so `mix my_app.rename` does not touch it and the template itself can deploy its
+reference instance without renaming.
+
+```sh
+gh variable set FLY_APP --body <app>
+
+# Deploy tokens are limited to one app. The default expiry is 20 years; prefer
+# something shorter and rotate. Piping into gh keeps the token out of your
+# scrollback.
+fly tokens create deploy --app <app> --name github-actions --expiry 8760h \
+  | gh secret set FLY_API_TOKEN
+```
+
+To rotate, run the same `fly tokens create ... | gh secret set` pipeline (it
+replaces the secret), then revoke the old token: `fly tokens list --scope app
+--app <app>` and `fly tokens revoke <id>`.
+
 ### Rotating the database credential
 
 The connection string is an ordinary Fly secret: `fly mpg create`/`attach`

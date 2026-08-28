@@ -82,6 +82,17 @@ defmodule Mix.Tasks.MyApp.RenameTest do
     assert msg =~ "Renamed to AcmeShop (acme_shop)"
   end
 
+  # The deploy workflow reads the app name from the FLY_APP repository variable
+  # so the rename does not have to touch it; guard against someone hard-coding
+  # a placeholder there later.
+  test "the deploy workflow contains no rename placeholders" do
+    contents = File.read!(".github/workflows/deploy.yml")
+
+    for token <- ~w(MyAppWeb MyApp my_app my-app) do
+      refute contents =~ token, "deploy.yml must not contain #{token}"
+    end
+  end
+
   test "validates its arguments", %{tmp: tmp} do
     in_dir(tmp, fn ->
       assert_raise Mix.Error, ~r/--otp .* is required/, fn ->
