@@ -32,7 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     # Automatic deploys require a successful CI run for a push to this
     # repository's default branch; manual dispatch deploys whichever ref was
-    # selected. workflow_run executes with this repository's secrets no matter
+    # selected, bounded by the production environment's deployment branch
+    # policy (CONTRIBUTING.md § Continuous deployment). workflow_run executes with this repository's secrets no matter
     # what triggered CI, and head_branch alone is not enough: a pull request
     # from a fork reports the fork's branch name, which can be anything.
     # Requiring a push event from this repository rules forks out entirely.

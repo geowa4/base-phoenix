@@ -167,6 +167,29 @@ To rotate, run the same `fly tokens create ... | gh secret set` pipeline (it
 replaces the secret), then revoke the old token: `fly tokens list --scope app
 --app <app>` and `fly tokens revoke <id>`.
 
+The deploy job runs in the `production` environment. Restrict that environment
+to the default branch so a manual run from the Actions tab cannot deploy an
+arbitrary ref: automatic deploys are already limited to pushes on the default
+branch by the workflow itself, but `workflow_dispatch` accepts any ref the
+person triggering it selects. The policy is a repository setting, not part of
+the workflow file, so each repository created from the template sets it once
+(replace `trunk` with your default branch). This is a custom branch policy
+rather than "protected branches only" because branch protection is not
+available on private repositories on the free plan.
+
+```sh
+gh api -X PUT repos/{owner}/{repo}/environments/production \
+  --input - <<'JSON'
+{"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}
+JSON
+gh api -X POST repos/{owner}/{repo}/environments/production/deployment-branch-policies \
+  -f name=trunk -f type=branch
+```
+
+The equivalent UI path is Settings → Environments → production → Deployment
+branches and tags → Selected branches and tags. No reviewer is required: the
+gate is "what can be deployed", not "who approves it".
+
 ### Rotating the database credential
 
 The connection string is an ordinary Fly secret: `fly mpg create`/`attach`
