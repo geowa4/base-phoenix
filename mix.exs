@@ -7,6 +7,7 @@ defmodule MyApp.MixProject do
       version: "0.1.0",
       elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
+      test_coverage: test_coverage(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -41,6 +42,28 @@ defmodule MyApp.MixProject do
   defp elixirc_paths(:test), do: ["lib", "dev", "test/support"]
   defp elixirc_paths(:dev), do: ["lib", "dev"]
   defp elixirc_paths(_), do: ["lib"]
+
+  # Coverage is enforced by CI (`mix test --cover`). Code that the suite cannot
+  # exercise is excluded so the percentage reflects product code only.
+  defp test_coverage do
+    [
+      summary: [threshold: 90],
+      ignore_modules: [
+        # dev/ tooling: exercised only against a real sprite (CONTRIBUTING.md § Sprites).
+        Mix.Sprite,
+        ~r/^Mix\.Tasks\.Sprite\./,
+        # Release-time migrator; runs outside the SQL sandbox.
+        MyApp.Release,
+        # Test scaffolding compiled from test/support.
+        MyApp.DataCase,
+        MyAppWeb.ConnCase,
+        MyApp.AccountsFixtures,
+        MyApp.ResendHelpers,
+        MyApp.ResendMock,
+        MyAppWeb.FailingBodyAdapter
+      ]
+    ]
+  end
 
   # Specifies your project dependencies.
   #

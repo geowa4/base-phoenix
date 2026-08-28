@@ -27,6 +27,7 @@ live in AGENTS.md; this file holds the detail those rules point to.
 - Run one file: `mix test test/my_app_web/live/inbox_live_test.exs`
 - Run one test: `mix test test/my_app_web/live/inbox_live_test.exs:42`
 - Re-run only failures: `mix test --failed`
+- Coverage report: `mix test --cover` (CI enforces the threshold set in `mix.exs`)
 - Stack: ExUnit, Ecto SQL Sandbox, Mox, StreamData, `Phoenix.LiveViewTest`,
   PhoenixTest. `Req.Test` stubs the HTTP behind `MyApp.Resend` (see
   `config/test.exs`); consumers of the Receiving API depend on the
