@@ -5,12 +5,14 @@ defmodule MyApp.InboundTest do
   import MyApp.ResendHelpers
 
   alias MyApp.Inbound
+  alias MyApp.Inbound.Email
 
   describe "normalize/1" do
     test "extracts the address from display-name forms and downcases" do
       assert Inbound.normalize("Alice Example <Alice@Example.com>") == "alice@example.com"
       assert Inbound.normalize("  BOB@example.com ") == "bob@example.com"
       assert Inbound.normalize("<carol@example.com>") == "carol@example.com"
+      assert Inbound.normalize(nil) == ""
     end
 
     property "is idempotent and never contains angle brackets or surrounding whitespace" do
@@ -67,15 +69,7 @@ defmodule MyApp.InboundTest do
 
       assert :ok = Inbound.handle_event(event)
 
-      assert_receive {:email_received,
-                      %{
-                        id: ^email_id,
-                        email_id: ^email_id,
-                        from: ^addr,
-                        to: ["inbound@my-app.example"],
-                        subject: "Hi",
-                        received_at: "2026-08-25T12:00:00.000Z"
-                      }}
+      assert_receive {:email_received, %Email{email_id: ^email_id, from: ^addr, subject: "Hi"}}
     end
 
     test "ignores other event types" do

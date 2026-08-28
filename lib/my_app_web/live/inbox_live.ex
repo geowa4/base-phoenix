@@ -12,6 +12,7 @@ defmodule MyAppWeb.InboxLive do
   use MyAppWeb, :live_view
 
   alias MyApp.{Inbound, Resend}
+  alias MyApp.Inbound.Email
 
   @impl true
   def mount(_params, _session, socket) do
@@ -30,8 +31,8 @@ defmodule MyAppWeb.InboxLive do
   def handle_async(:backfill, {:ok, {:ok, emails}}, socket) do
     mine =
       emails
-      |> Enum.filter(&(Inbound.normalize(&1["from"] || "") == socket.assigns.user_email))
-      |> Enum.map(&entry/1)
+      |> Enum.map(&Email.from_api/1)
+      |> Enum.filter(&(&1.from == socket.assigns.user_email))
 
     {:noreply, socket |> assign(loading: false) |> stream(:emails, mine)}
   end
@@ -78,16 +79,5 @@ defmodule MyAppWeb.InboxLive do
       </table>
     </Layouts.app>
     """
-  end
-
-  defp entry(%{"id" => id} = e) do
-    %{
-      id: id,
-      email_id: id,
-      from: Inbound.normalize(e["from"] || ""),
-      to: e["to"] || [],
-      subject: e["subject"],
-      received_at: e["created_at"]
-    }
   end
 end
