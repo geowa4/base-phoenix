@@ -57,3 +57,17 @@ defmodule MyAppWeb.Plugs.CacheRawBodyTest do
     refute Map.has_key?(conn.assigns, :raw_body)
   end
 end
+
+defmodule MyAppWeb.Plugs.CacheRawBodyErrorTest do
+  use ExUnit.Case, async: true
+
+  import Plug.Test
+
+  alias MyAppWeb.Plugs.CacheRawBody
+
+  test "a failed webhook body read is passed through untouched" do
+    conn = %{conn(:post, "/webhooks/resend", "{}") | adapter: {MyAppWeb.FailingBodyAdapter, nil}}
+
+    assert CacheRawBody.read_body(conn, []) == {:error, :timeout}
+  end
+end
