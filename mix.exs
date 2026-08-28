@@ -14,7 +14,8 @@ defmodule MyApp.MixProject do
       listeners: [Phoenix.CodeReloader],
       releases: releases(),
       dialyzer: dialyzer(),
-      usage_rules: usage_rules()
+      usage_rules: usage_rules(),
+      hex: hex()
     ]
   end
 
@@ -34,8 +35,11 @@ defmodule MyApp.MixProject do
     ]
   end
 
-  # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  # Specifies which paths to compile per environment. `dev/` holds developer
+  # tooling (the `mix sprite.*` tasks) whose dependencies are dev-only, so it
+  # is never compiled into a release.
+  defp elixirc_paths(:test), do: ["lib", "dev", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "dev"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
@@ -104,6 +108,7 @@ defmodule MyApp.MixProject do
       {:igniter, "~> 0.8", only: [:dev, :test]},
       {:usage_rules, "~> 1.2", only: [:dev, :test]},
       {:tidewave, "~> 0.9", only: :dev},
+      {:sprites, "~> 0.2.1", only: [:dev, :test]},
       {:phoenix_test, "~> 0.12.1", only: :test, runtime: false},
       {:mox, "~> 1.2", only: :test},
       {:stream_data, "~> 1.0", only: [:dev, :test]}
@@ -159,6 +164,20 @@ defmodule MyApp.MixProject do
       plt_core_path: "priv/plts/core.plt",
       plt_local_path: "priv/plts/project.plt",
       plt_add_apps: [:mix, :ex_unit]
+    ]
+  end
+
+  # Advisories acknowledged after review (`mix hex.audit` runs in CI). Remove
+  # each entry once the fix is released and the dependency updated.
+  defp hex do
+    [
+      # gun/cowlib come in through the dev-only Sprites SDK, which uses them
+      # purely as an HTTP/WebSocket client against api.sprites.dev with fixed
+      # headers. The advisories are header-injection issues that require
+      # attacker-controlled header values (structured headers, Cookie, Link),
+      # which the `mix sprite.*` tasks never send. Affected: gun 2.5.0,
+      # cowlib 2.19.0 (latest as of 2026-08).
+      ignore_advisories: ["CVE-2026-43966", "CVE-2026-43969", "CVE-2026-43971"]
     ]
   end
 

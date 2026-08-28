@@ -220,6 +220,52 @@ After the first deploy, point the Resend `email.received` webhook at
 `https://<app>.fly.dev/webhooks/resend` and set `RESEND_WEBHOOK_SECRET` to the
 signing secret Resend shows for that endpoint.
 
+## Sprites (cloud dev VM)
+
+A [Fly.io Sprite](https://sprites.dev) is a small Linux VM with Claude Code
+preinstalled. The `mix sprite.*` tasks (in `dev/`, compiled only in dev/test)
+provision one as a complete copy of this development environment via the
+[sprites-ex](https://github.com/superfly/sprites-ex) SDK.
+
+- Prerequisites: the `sprite` CLI, logged in (for `mix sprite.connect`), and an
+  API token from https://sprites.dev/account exported as `SPRITES_TOKEN`. The
+  CLI's own token is stored encrypted, so the SDK cannot reuse it.
+- Create and provision: `mix sprite.up [--name NAME] [--ssh-key PATH]`.
+  It creates the sprite (default name: the repository name), installs PostgreSQL
+  and runs it as the `postgres` service (`postgres`/`postgres` on `localhost:5432`),
+  installs the Elixir pinned in `.tool-versions`, generates a key pair in the
+  sprite and registers it as a write-enabled deploy key on the GitHub repo with
+  `gh` (or copies `--ssh-key PATH`; required for non-GitHub remotes), copies
+  your git identity, clones the current branch into `/home/sprite/<repo>`, runs
+  `mix setup`, runs `mix phx.server` as the `phoenix` service routed to the
+  sprite's URL, and takes a checkpoint of the running app. Every step is
+  idempotent; re-run it to resume after a failure or to restart the services
+  (a checkpoint is only taken when none with the same comment exists yet).
+- Open a session: `mix sprite.connect` starts a login shell in the repository
+  directory; `mix sprite.connect -- claude` (or any command) runs that instead.
+  It hands the terminal to `sprite exec --tty`, so Ctrl-\ detaches and
+  `sprite sessions` / `sprite attach` manage sessions. When the session ends
+  the task offers to take a checkpoint (`--no-checkpoint` to skip).
+- Claude Code is preinstalled but not signed in: `mix sprite.connect -- claude`,
+  then `/login`. Take a checkpoint afterwards if you want to keep it.
+- Stop the services: `mix sprite.stop` (the sprite pauses on its own when idle).
+- Destroy it: `mix sprite.down [--yes]` deletes the sprite with its checkpoints
+  and removes its deploy key from the GitHub repository.
+- Checkpoints: `mix sprite.checkpoint create [--comment TEXT]`,
+  `mix sprite.checkpoint list`, `mix sprite.checkpoint restore ID`. Checkpoints
+  capture the filesystem only; restoring restarts the environment and brings the
+  services back from their definitions.
+- Known differences from local: the sprite image ships Ubuntu 26.04, so its
+  packaged PostgreSQL is 18 (Fly Managed Postgres is 17; nothing here depends on
+  18-only features), and the sprite's Erlang/OTP 28.x build is used rather than
+  the exact patch pinned in `.tool-versions`. The sprite's URL is reachable by
+  org members only until `sprite url update --auth public -s NAME`. A copied
+  `--ssh-key` must not have a passphrase (nothing can enter it in the sprite).
+  Destroying a sprite any other way than `mix sprite.down` leaves its deploy
+  key on GitHub.
+- Inspect services and logs from a console: `sprite-env services list`,
+  `tail -f /.sprite/logs/services/phoenix.log`.
+
 ## Add-ons (documented, not installed)
 
 - **Assent** (`~> 0.3`) — OAuth/OIDC. Add a `user_identities` table keyed on
