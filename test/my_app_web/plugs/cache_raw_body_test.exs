@@ -13,6 +13,28 @@ defmodule MyAppWeb.Plugs.CacheRawBodyTest do
                  json_decoder: Jason
                )
 
+  # `Plug.Conn.read_body/2` answers `{:more, chunk, conn}` when the body is
+  # longer than `:length`. The reader has to hand that back so the parser can
+  # turn it into a 413, rather than matching only on `{:ok, ...}`.
+  @tiny_parser_opts Plug.Parsers.init(
+                      parsers: [:json],
+                      pass: ["*/*"],
+                      body_reader: {CacheRawBody, :read_body, []},
+                      json_decoder: Jason,
+                      length: 16
+                    )
+
+  test "an oversized webhook body is rejected as too large" do
+    body = ~s({"payload":") <> String.duplicate("a", 1_024) <> ~s("})
+
+    assert_raise Plug.Parsers.RequestTooLargeError, fn ->
+      :post
+      |> conn("/webhooks/resend", body)
+      |> put_req_header("content-type", "application/json")
+      |> Plug.Parsers.call(@tiny_parser_opts)
+    end
+  end
+
   test "captures the raw body for webhook requests" do
     conn =
       :post

@@ -58,6 +58,22 @@ defmodule MyAppWeb.WebhookControllerTest do
     assert_receive {:email_received, _}
   end
 
+  test "a signature tagged with another scheme is rejected", %{conn: conn, sender: sender} do
+    body = Jason.encode!(received_event(%{from: sender}))
+    id = "msg_scheme"
+    ts = System.system_time(:second)
+    # The bytes are a valid v1 signature; only the scheme tag differs.
+    "v1," <> sig = signature(id, ts, body)
+
+    conn =
+      conn
+      |> sign_webhook(body, id: id, timestamp: ts, signature: "v0," <> sig)
+      |> post(~p"/webhooks/resend", body)
+
+    assert response(conn, 401) == "invalid signature"
+    refute_receive {:email_received, _}
+  end
+
   test "a bad signature is rejected before any processing", %{conn: conn, sender: sender} do
     body = Jason.encode!(received_event(%{from: sender}))
     forged = "whsec_" <> Base.encode64("wrong-secret")
