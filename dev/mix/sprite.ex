@@ -101,6 +101,7 @@ defmodule Mix.Sprite do
     end
   end
 
+  @spec raise_lookup_error(String.t(), term()) :: no_return()
   defp raise_lookup_error(_name, {:api_error, 401, _body}) do
     Mix.raise("""
     api.sprites.dev rejected SPRITES_TOKEN (401).
