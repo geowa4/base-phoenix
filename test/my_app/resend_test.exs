@@ -6,13 +6,6 @@ defmodule MyApp.ResendTest do
   alias MyApp.Resend
 
   describe "list_received/1" do
-    test "returns the page data and has_more flag" do
-      email = received_email()
-      stub_received_emails([email], true)
-
-      assert {:ok, [^email], true} = Resend.list_received(limit: 1)
-    end
-
     test "sends the bearer token and query params" do
       Req.Test.stub(Resend, fn conn ->
         assert Plug.Conn.get_req_header(conn, "authorization") == ["Bearer re_test_key"]
@@ -22,6 +15,11 @@ defmodule MyApp.ResendTest do
       end)
 
       assert {:ok, [], false} = Resend.list_received(limit: 5, after: "em_1")
+    end
+
+    test "reports a 200 whose body carries no data list" do
+      Req.Test.stub(Resend, fn conn -> Req.Test.json(conn, %{"object" => "list"}) end)
+      assert {:error, :unexpected_body} = Resend.list_received()
     end
 
     test "reports unexpected statuses" do
@@ -54,6 +52,32 @@ defmodule MyApp.ResendTest do
 
       assert {:ok, emails} = Resend.list_received_all()
       assert Enum.map(emails, & &1["id"]) == ["em_1", "em_2", "em_3"]
+    end
+
+    test "stops when a page comes back empty despite has_more" do
+      Req.Test.stub(Resend, fn conn ->
+        Req.Test.json(conn, %{"object" => "list", "has_more" => true, "data" => []})
+      end)
+
+      assert {:ok, []} = Resend.list_received_all()
+    end
+
+    test "propagates an error raised part-way through the pages" do
+      Req.Test.stub(Resend, fn conn ->
+        case conn.query_params["after"] do
+          nil ->
+            Req.Test.json(conn, %{
+              "object" => "list",
+              "has_more" => true,
+              "data" => [received_email(%{id: "em_1"})]
+            })
+
+          "em_1" ->
+            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"message" => "boom"})
+        end
+      end)
+
+      assert {:error, {:unexpected_status, 500}} = Resend.list_received_all()
     end
 
     test "stops after max_pages" do

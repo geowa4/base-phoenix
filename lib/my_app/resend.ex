@@ -11,7 +11,8 @@ defmodule MyApp.Resend do
   @page_size 100
   @max_pages 5
 
-  @type email :: map()
+  @typedoc "A received-email object as returned by the Receiving API."
+  @type email :: %{optional(String.t()) => term()}
 
   @doc """
   Lists received emails (`GET /emails/receiving`), one page.
@@ -19,7 +20,13 @@ defmodule MyApp.Resend do
   Accepts the endpoint's query params (`limit`, `after`, `before`). Returns the
   `data` list plus the `has_more` flag so callers can paginate.
   """
-  @spec list_received(keyword()) :: {:ok, [email()], boolean()} | {:error, term()}
+  @spec list_received(keyword()) ::
+          {:ok, [email()], boolean()}
+          | {:error,
+             :missing_api_key
+             | :unexpected_body
+             | {:unexpected_status, pos_integer()}
+             | Exception.t()}
   def list_received(params \\ []) do
     with {:ok, key} <- api_key() do
       [url: @base_url <> "/emails/receiving", auth: {:bearer, key}, params: params]
@@ -28,6 +35,9 @@ defmodule MyApp.Resend do
       |> case do
         {:ok, %Req.Response{status: 200, body: %{"data" => data} = body}} ->
           {:ok, data, body["has_more"] == true}
+
+        {:ok, %Req.Response{status: 200}} ->
+          {:error, :unexpected_body}
 
         {:ok, %Req.Response{} = resp} ->
           {:error, {:unexpected_status, resp.status}}
@@ -42,7 +52,7 @@ defmodule MyApp.Resend do
   Lists received emails across pages by following the `after` cursor, newest
   first, up to `max_pages` pages of #{@page_size}.
   """
-  @spec list_received_all(pos_integer()) :: {:ok, [email()]} | {:error, term()}
+  @spec list_received_all(non_neg_integer()) :: {:ok, [email()]} | {:error, term()}
   def list_received_all(max_pages \\ @max_pages), do: fetch_pages([], nil, max_pages)
 
   defp fetch_pages(acc, _cursor, 0), do: {:ok, acc}
