@@ -17,6 +17,10 @@ live in AGENTS.md; this file holds the detail those rules point to.
   Dialyzer runs in CI; run `mix dialyzer` locally only when investigating a
   CI failure.
 - Pre-commit hook (format + credo): `git config core.hooksPath .githooks`
+- Catch up with origin: `mix sync` fetches and rebases the current branch onto
+  origin's default branch (in `dev/`, dev/test only). A conflicting rebase is
+  left in progress for you to resolve and the task fails. `mix sprite.sync`
+  does the same inside the app's sprite.
 - Agent instruction sync: `mix usage_rules.sync` after every dependency change;
   `mix usage_rules.sync --check` reports drift without writing.
 - Tidewave MCP for coding agents (dev only): `claude mcp add --transport http tidewave http://127.0.0.1:4000/tidewave/mcp`

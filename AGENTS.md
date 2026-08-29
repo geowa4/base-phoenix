@@ -56,6 +56,8 @@ section referenced below before working in that area.
 
 - Make focused, imperative commits; never commit generated artifacts, `_build`,
   `deps`, or secrets.
+- `mix sync` rebases the current branch onto origin's default branch (leaves a
+  conflicting rebase in progress for you to resolve).
 - Re-verify tool and dependency versions at bootstrap; this file may lag reality.
 - After any dependency change run `mix usage_rules.sync` and commit the result;
   CI fails on drift.
