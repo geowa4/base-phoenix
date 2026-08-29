@@ -348,10 +348,17 @@ defmodule Mix.Sprite do
         info("Service #{name} is running")
 
       _status ->
-        step("Starting service #{name}")
-        sh!(sprite, "sprite-env services start #{name} --no-stream")
+        start_service!(sprite, name)
     end
 
+    :ok
+  end
+
+  @doc "Starts a defined service, printing progress."
+  @spec start_service!(Sprite.t(), String.t()) :: :ok
+  def start_service!(sprite, name) do
+    step("Starting service #{name}")
+    sh!(sprite, "sprite-env services start #{name} --no-stream")
     :ok
   end
 

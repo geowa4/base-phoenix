@@ -356,6 +356,7 @@ defmodule Mix.Tasks.Sprite.Up do
                    (org members only; `sprite url update --auth public -s #{sprite.name}` opens it up)
       Console:     mix sprite.connect
       Claude:      mix sprite.connect -- claude   then /login (not signed in yet)
+      Update:      mix sprite.update (latest origin default branch, app restarted)
       Services:    mix sprite.stop, then mix sprite.up to bring them back
       Checkpoints: mix sprite.checkpoint list | create | restore ID
       Destroy:     mix sprite.down

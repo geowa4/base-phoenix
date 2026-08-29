@@ -63,7 +63,8 @@ section referenced below before working in that area.
   evaluate code, inspect logs, and query the dev database.
 - Observability endpoints and metrics: CONTRIBUTING.md § Observability & health.
 - Cloud dev VM on Fly Sprites: `mix sprite.up`, `mix sprite.connect`,
-  `mix sprite.stop`, `mix sprite.checkpoint`, `mix sprite.down`; tasks live in
+  `mix sprite.update`, `mix sprite.stop`, `mix sprite.checkpoint`,
+  `mix sprite.down`; tasks live in
   `dev/` (dev/test only). Details: CONTRIBUTING.md § Sprites.
 
 <!-- usage-rules-start -->

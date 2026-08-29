@@ -252,6 +252,13 @@ provision one as a complete copy of this development environment via the
   the task offers to take a checkpoint (`--no-checkpoint` to skip).
 - Claude Code is preinstalled but not signed in: `mix sprite.connect -- claude`,
   then `/login`. Take a checkpoint afterwards if you want to keep it.
+- Update to the latest code: `mix sprite.update [--no-checkpoint]` fetches
+  `origin`, rebases the sprite's checked-out branch onto origin's default branch
+  (a conflicting rebase is aborted and the task fails; the working tree must be
+  clean), and when the `phoenix` service is running restarts it after
+  `mix deps.get`, `mix assets.setup`, `mix compile`, and `mix ecto.migrate`,
+  waiting for `/healthz/ready`. It then takes a checkpoint named after the new
+  commit. Nothing happens when the sprite is already up to date.
 - Stop the services: `mix sprite.stop` (the sprite pauses on its own when idle).
 - Destroy it: `mix sprite.down [--yes]` deletes the sprite with its checkpoints
   and removes its deploy key from the GitHub repository.
