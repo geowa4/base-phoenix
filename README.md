@@ -37,8 +37,6 @@ and deployment, and `AGENTS.md` for the rules coding agents follow.
 - [ ] `mix setup` completes; `mix phx.server` boots.
 - [ ] `mix precommit` passes locally.
 - [ ] `mix usage_rules.sync` run; AGENTS.md managed section committed.
-- [ ] `CLAUDE.md` contains `@AGENTS.md`; CI bridge guard passes.
-- [ ] Tidewave reachable in dev; `claude mcp add` succeeds.
 - [ ] Inbox smoke test: an email from a registered address appears live at `/inbox`
       and survives a remount via API backfill.
 - [ ] Fly secrets set; blue-green deploy succeeds; readiness gate healthy.
