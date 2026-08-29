@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Sprite.Up do
     1. creates the sprite (`--name`, default: the repository name)
     2. installs PostgreSQL and runs it as the `postgres` Sprite service
        (`postgres`/`postgres` on `localhost:5432`, matching `config/dev.exs`)
-    3. installs the Elixir version pinned in `.tool-versions`
+    3. installs the Elixir version pinned in `mise.toml`
     4. gives the sprite GitHub access and clones this repository's current
        branch into `/home/sprite/<repo>`: by default a key pair generated
        inside the sprite is registered as a write-enabled deploy key on the
@@ -110,11 +110,11 @@ defmodule Mix.Tasks.Sprite.Up do
   end
 
   defp elixir_version! do
-    with {:ok, contents} <- File.read(".tool-versions"),
+    with {:ok, contents} <- File.read("mise.toml"),
          version when is_binary(version) <- Sprite.elixir_version(contents) do
       version
     else
-      _ -> Mix.raise("Could not read the elixir version from .tool-versions")
+      _ -> Mix.raise("Could not read the elixir version from mise.toml")
     end
   end
 

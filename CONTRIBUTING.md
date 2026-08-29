@@ -5,8 +5,8 @@ live in AGENTS.md; this file holds the detail those rules point to.
 
 ## Setup
 
-- Toolchain: Erlang/OTP 28 and Elixir 1.20 (pinned in `.tool-versions`; `mise install`
-  or `asdf install`). PostgreSQL 17 on `localhost:5432` with `postgres`/`postgres`
+- Toolchain: Erlang/OTP 28 and Elixir 1.20 (pinned in `mise.toml`; `mise install`).
+  PostgreSQL 17 on `localhost:5432` with `postgres`/`postgres`
   (for example `podman run -d --name base-phoenix-pg -e POSTGRES_PASSWORD=postgres
   -p 5432:5432 -v base-phoenix-pgdata:/var/lib/postgresql/data postgres:17`).
 - Install and set up everything: `mix setup`
@@ -241,7 +241,7 @@ provision one as a complete copy of this development environment via the
 - Create and provision: `mix sprite.up [--name NAME] [--ssh-key PATH]`.
   It creates the sprite (default name: the repository name), installs PostgreSQL
   and runs it as the `postgres` service (`postgres`/`postgres` on `localhost:5432`),
-  installs the Elixir pinned in `.tool-versions`, generates a key pair in the
+  installs the Elixir pinned in `mise.toml`, generates a key pair in the
   sprite and registers it as a write-enabled deploy key on the GitHub repo with
   `gh` (or copies `--ssh-key PATH`; required for non-GitHub remotes), copies
   your git identity, clones the current branch into `/home/sprite/<repo>`, runs
@@ -273,7 +273,7 @@ provision one as a complete copy of this development environment via the
 - Known differences from local: the sprite image ships Ubuntu 26.04, so its
   packaged PostgreSQL is 18 (Fly Managed Postgres is 17; nothing here depends on
   18-only features), and the sprite's Erlang/OTP 28.x build is used rather than
-  the exact patch pinned in `.tool-versions`. The sprite's URL is reachable by
+  the exact patch pinned in `mise.toml`. The sprite's URL is reachable by
   org members only until `sprite url update --auth public -s NAME`. A copied
   `--ssh-key` must not have a passphrase (nothing can enter it in the sprite).
   Destroying a sprite any other way than `mix sprite.down` leaves its deploy

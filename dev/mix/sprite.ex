@@ -199,10 +199,10 @@ defmodule Mix.Sprite do
     )
   end
 
-  @doc "The Elixir version pinned in a `.tool-versions` file's contents, or nil."
+  @doc "The Elixir version pinned in a `mise.toml` file's contents, or nil."
   @spec elixir_version(String.t()) :: String.t() | nil
-  def elixir_version(tool_versions) do
-    capture(~r/^elixir\s+(\d+\.\d+\.\d+)/m, tool_versions)
+  def elixir_version(mise_toml) do
+    capture(~r/^elixir\s*=\s*"(\d+\.\d+\.\d+)/m, mise_toml)
   end
 
   ## Remote execution

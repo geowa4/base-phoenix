@@ -68,11 +68,18 @@ defmodule Mix.SpriteTest do
 
   describe "elixir_version/1" do
     test "reads the pinned version, ignoring the OTP suffix" do
-      assert Sprite.elixir_version("erlang 28.3.3\nelixir 1.20.3-otp-28\n") == "1.20.3"
+      assert Sprite.elixir_version("""
+             [tools]
+             erlang = "28.3.3"
+             elixir = "1.20.3-otp-28"
+             """) == "1.20.3"
     end
 
     test "is nil when elixir is not pinned" do
-      assert Sprite.elixir_version("erlang 28.3.3\n") == nil
+      assert Sprite.elixir_version("""
+             [tools]
+             erlang = "28.3.3"
+             """) == nil
     end
   end
 end
