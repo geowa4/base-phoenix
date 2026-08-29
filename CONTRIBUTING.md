@@ -252,7 +252,7 @@ provision one as a complete copy of this development environment via the
   the task offers to take a checkpoint (`--no-checkpoint` to skip).
 - Claude Code is preinstalled but not signed in: `mix sprite.connect -- claude`,
   then `/login`. Take a checkpoint afterwards if you want to keep it.
-- Update to the latest code: `mix sprite.update [--no-checkpoint]` fetches
+- Update to the latest code: `mix sprite.sync [--no-checkpoint]` fetches
   `origin`, rebases the sprite's checked-out branch onto origin's default branch
   (a conflicting rebase is aborted and the task fails; the working tree must be
   clean), and when the `phoenix` service is running restarts it after

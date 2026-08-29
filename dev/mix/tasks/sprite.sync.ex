@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Sprite.Update do
+defmodule Mix.Tasks.Sprite.Sync do
   @shortdoc "Updates the app's Sprite to the latest commit of origin's default branch"
 
   @moduledoc """
@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Sprite.Update do
   When the sprite is already at the latest commit nothing is restarted and no
   checkpoint is taken. Requires `SPRITES_TOKEN`; see CONTRIBUTING.md § Sprites.
 
-      mix sprite.update [--name NAME] [--no-checkpoint]
+      mix sprite.sync [--name NAME] [--no-checkpoint]
 
   ## Options
 
@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Sprite.Update do
       restart_if_running(sprite, dest)
 
       if Keyword.get(opts, :checkpoint, true) do
-        Sprite.ensure_checkpoint!(sprite, "mix sprite.update: #{branch} at #{short(after_)}")
+        Sprite.ensure_checkpoint!(sprite, "mix sprite.sync: #{branch} at #{short(after_)}")
       end
     end
   end
@@ -82,7 +82,7 @@ defmodule Mix.Tasks.Sprite.Update do
       echo "Rebasing $branch onto $default hit conflicts; the rebase was aborted and $branch is unchanged"
       exit 1
     fi
-    echo "SPRITE_UPDATE $branch $default"
+    echo "SPRITE_SYNC $branch $default"
     """
 
     case Sprite.sh(sprite, script, env: [{"DEST", dest}]) do
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Sprite.Update do
   defp parse_report(out) do
     lines = out |> String.trim() |> String.split("\n")
     {report, [marker]} = Enum.split(lines, -1)
-    {report, marker |> String.trim_leading("SPRITE_UPDATE ") |> String.split(" ", parts: 2)}
+    {report, marker |> String.trim_leading("SPRITE_SYNC ") |> String.split(" ", parts: 2)}
   end
 
   ## Restart
