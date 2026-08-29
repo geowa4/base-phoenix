@@ -42,3 +42,5 @@ and deployment, and `AGENTS.md` for the rules coding agents follow.
 - [ ] Inbox smoke test: an email from a registered address appears live at `/inbox`
       and survives a remount via API backfill.
 - [ ] Fly secrets set; blue-green deploy succeeds; readiness gate healthy.
+- [ ] `README.md` rewritten to describe this project (template intro and this
+      checklist removed).
