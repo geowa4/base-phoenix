@@ -19,8 +19,14 @@ A batteries-included, production-shaped Phoenix 1.8 LiveView application:
 
        mix my_app.rename --otp my_shop --module MyShop
 
-3. Update the copyright line in `LICENSE`.
-4. Bootstrap:
+3. Rebuild from scratch so the renamed modules replace the stale build
+   artifacts (otherwise tasks such as `mix sprite.*` won't appear in `mix help`):
+
+       mix clean
+       mix compile
+
+4. Update the copyright line in `LICENSE`.
+5. Bootstrap:
 
        mix setup
        mix usage_rules.sync
@@ -33,6 +39,8 @@ and deployment, and `AGENTS.md` for the rules coding agents follow.
 ## Bootstrap checklist
 
 - [ ] `mix my_app.rename` run; template task self-deleted.
+- [ ] `mix clean && mix compile` run after the rename; `mix help | grep sprite`
+      lists the sprite tasks.
 - [ ] `LICENSE` copyright line updated.
 - [ ] `mix setup` completes; `mix phx.server` boots.
 - [ ] `mix precommit` passes locally.
